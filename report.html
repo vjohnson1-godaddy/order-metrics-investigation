@@ -1,0 +1,443 @@
+<title>F2P Anti-Join Investigation</title>
+<meta name="color-scheme" content="light dark">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-alt: #f0efec;
+    --border: #d8d5cf;
+    --border-subtle: #e8e6e1;
+    --text: #1a1917;
+    --text-secondary: #5c5a54;
+    --text-tertiary: #8a877f;
+    --accent: #b44d2d;
+    --accent-soft: #f3e3dc;
+    --confirm: #2d7a3a;
+    --confirm-soft: #dff0e2;
+    --warn: #a85d00;
+    --warn-soft: #fef3e0;
+    --danger: #b43333;
+    --danger-soft: #fce4e4;
+    --code-bg: #f5f4f1;
+    --code-border: #e0ddd7;
+    --highlight: #fff8c5;
+    --tag-bg: #eae8e3;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1917;
+      --surface: #242320;
+      --surface-alt: #2c2b27;
+      --border: #3d3b36;
+      --border-subtle: #33312c;
+      --text: #e8e6e1;
+      --text-secondary: #a8a59e;
+      --text-tertiary: #7a776f;
+      --accent: #d4724f;
+      --accent-soft: #3a2820;
+      --confirm: #5cb86b;
+      --confirm-soft: #1e2f20;
+      --warn: #d4a03a;
+      --warn-soft: #2f2a1a;
+      --danger: #d45555;
+      --danger-soft: #2f1e1e;
+      --code-bg: #2c2b27;
+      --code-border: #3d3b36;
+      --highlight: #3a3520;
+      --tag-bg: #33312c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1917;
+    --surface: #242320;
+    --surface-alt: #2c2b27;
+    --border: #3d3b36;
+    --border-subtle: #33312c;
+    --text: #e8e6e1;
+    --text-secondary: #a8a59e;
+    --text-tertiary: #7a776f;
+    --accent: #d4724f;
+    --accent-soft: #3a2820;
+    --confirm: #5cb86b;
+    --confirm-soft: #1e2f20;
+    --warn: #d4a03a;
+    --warn-soft: #2f2a1a;
+    --danger: #d45555;
+    --danger-soft: #2f1e1e;
+    --code-bg: #2c2b27;
+    --code-border: #3d3b36;
+    --highlight: #3a3520;
+    --tag-bg: #33312c;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Type scale */
+  h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.25; margin: 0 0 8px; text-wrap: balance; letter-spacing: -0.02em; }
+  h2 { font-size: 1.125rem; font-weight: 600; line-height: 1.35; margin: 48px 0 12px; text-wrap: balance; letter-spacing: -0.01em; }
+  h3 { font-size: 0.9375rem; font-weight: 600; line-height: 1.4; margin: 32px 0 8px; }
+  p { margin: 0 0 16px; }
+
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace; }
+
+  /* Header */
+  .header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 32px; }
+  .header-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 16px; }
+  .tag { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--tag-bg); color: var(--text-secondary); }
+  .tag--confirmed { background: var(--confirm-soft); color: var(--confirm); }
+  .tag--platform { background: var(--danger-soft); color: var(--danger); }
+  .subtitle { color: var(--text-secondary); font-size: 0.9375rem; margin: 0; }
+
+  /* Verdict banner */
+  .verdict { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 16px 20px; margin: 24px 0 32px; border-radius: 0 4px 4px 0; }
+  .verdict p { margin: 0; font-size: 0.9375rem; }
+  .verdict strong { color: var(--accent); }
+
+  /* Data table */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-tertiary); padding: 8px 12px; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; }
+  .excluded { color: var(--danger); font-weight: 500; }
+  .included { color: var(--confirm); }
+
+  /* Code blocks */
+  pre { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 4px; padding: 16px; overflow-x: auto; font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; line-height: 1.55; margin: 12px 0 20px; }
+  code { font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; }
+  p code, li code { background: var(--code-bg); border: 1px solid var(--code-border); padding: 1px 5px; border-radius: 3px; }
+  .highlight-line { background: var(--highlight); margin: 0 -16px; padding: 0 16px; display: block; }
+
+  /* Flow diagram */
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 20px 0 28px; }
+  .flow-step { display: flex; gap: 12px; align-items: flex-start; }
+  .flow-pipe { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 24px; }
+  .flow-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface); flex-shrink: 0; }
+  .flow-dot--bug { border-color: var(--danger); background: var(--danger); }
+  .flow-line { width: 2px; background: var(--border); flex-grow: 1; min-height: 28px; }
+  .flow-content { padding: 0 0 20px; font-size: 0.875rem; flex: 1; }
+  .flow-content strong { display: block; margin-bottom: 2px; }
+  .flow-content span { color: var(--text-secondary); font-size: 0.8125rem; }
+
+  /* File ref */
+  .fileref { font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; color: var(--text-secondary); }
+
+  /* Section divider */
+  .divider { border: none; border-top: 1px solid var(--border-subtle); margin: 40px 0; }
+
+  /* Query result block */
+  .query-block { margin: 20px 0 28px; }
+  .query-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+
+  /* Diff blocks */
+  .diff { margin: 16px 0 24px; }
+  .diff-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 6px 16px; border-radius: 4px 4px 0 0; }
+  .diff-before .diff-label { background: var(--danger-soft); color: var(--danger); }
+  .diff-after .diff-label { background: var(--confirm-soft); color: var(--confirm); }
+  .diff pre { margin: 0; border-radius: 0 0 4px 4px; }
+
+  /* Compact list */
+  ul { padding-left: 20px; margin: 8px 0 16px; }
+  li { margin-bottom: 6px; font-size: 0.9375rem; }
+  li::marker { color: var(--text-tertiary); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { padding: 32px 16px 64px; }
+    h1 { font-size: 1.5rem; }
+    pre { font-size: 0.75rem; padding: 12px; }
+    th, td { padding: 8px; }
+  }
+</style>
+
+<div class="header">
+  <div class="header-meta">
+    <span class="tag tag--confirmed">Root cause confirmed</span>
+    <span class="tag tag--platform">Platform-level bug</span>
+    <span class="tag">2026-09-01</span>
+  </div>
+  <h1>GCR Under-Reporting in merch_precheck_gdexp_14156_AAB_99</h1>
+  <p class="subtitle">F2P anti-join in the order metrics data cube is globally scoped, incorrectly excluding conversions that appear as direct orders in other experiments.</p>
+</div>
+
+<div class="verdict">
+  <p><strong>Verdict:</strong> 86 of 115 Starter f2p conversions ($9,957 of $13,329) are dropped for treatment1. The f2p anti-join checks paid orders against ALL experiments instead of scoping per-experiment. This is a platform bug in <code>order_metrics.sql</code>, not specific to this experiment.</p>
+</div>
+
+<h2>Reported discrepancy</h2>
+
+<p>Shashi Gupta reported treatment GCR mismatch between Hivemind and manual calculation. Control matches.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Cohort</th><th>Source</th><th class="num">GCR</th><th class="num">Delta</th></tr></thead>
+  <tbody>
+    <tr><td>control1</td><td>Hivemind</td><td class="num">$16,911</td><td class="num included">&mdash;</td></tr>
+    <tr><td>control1</td><td>Manual</td><td class="num">$16,911</td><td class="num included">match</td></tr>
+    <tr><td>treatment1</td><td>Hivemind</td><td class="num">$15,414</td><td class="num excluded" rowspan="2">&minus;$7,770</td></tr>
+    <tr><td>treatment1</td><td>Manual</td><td class="num">$23,184</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Initial hypothesis from Shashi: Billing Agent orders excluded. <strong>Ruled out</strong> &mdash; no <code>point_of_purchase</code> filter exists at the ETL level.</p>
+
+<hr class="divider">
+
+<h2>Data path: how the stats engine reads order metrics</h2>
+
+<p>The stats engine does <strong>not</strong> read from Level 4 SQL parquet output (a red herring). It reads from a data cube built by <code>MetricCubeJob</code>:</p>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="flow-pipe"><div class="flow-dot"></div><div class="flow-line"></div></div>
+    <div class="flow-content">
+      <strong>MetricCubeJob</strong>
+      <span>Executes <code>order_metrics.sql</code> with f2p logic against all experiments via EMR Serverless</span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-pipe"><div class="flow-dot"></div><div class="flow-line"></div></div>
+    <div class="flow-content">
+      <strong>SQL rewrite: <code>rewrite_full_sql()</code></strong>
+      <span><code>strip_scorecard_filters()</code> removes scorecard WHERE clauses &rarr; <code>experiment_order_cache</code> becomes globally unfiltered</span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-pipe"><div class="flow-dot flow-dot--bug"></div><div class="flow-line"></div></div>
+    <div class="flow-content">
+      <strong>f2p CACHE TABLE anti-join (BUG HERE)</strong>
+      <span>Anti-join checks paid orders against all <code>order_id</code>s in the now-global <code>experiment_order_cache</code></span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-pipe"><div class="flow-dot"></div><div class="flow-line"></div></div>
+    <div class="flow-content">
+      <strong>Cube output &rarr; S3</strong>
+      <span><code>s3://gd-gxcoreservices-prod-hivemind-shared-data/deep-research/order-metrics-ads</code></span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-pipe"><div class="flow-dot"></div></div>
+    <div class="flow-content">
+      <strong>Stats engine reads cube</strong>
+      <span>Applies named filter <code>new_airo_builder_paid_plan_order</code> as pushdown + pandas filters at read time</span>
+    </div>
+  </div>
+</div>
+
+<p class="fileref">hivemind-analysis/configs/production.json &rarr; metric_cube.order_metrics<br>
+hivemind-pyspark-etl/hivemind_etl/jobs/metric_cube_job.py:207-244<br>
+hivemind-pyspark-etl/hivemind_etl/utils/sql_glot_util.py:158-188</p>
+
+<hr class="divider">
+
+<h2>Root cause: f2p anti-join over-scoped in cube path</h2>
+
+<p>The f2p CACHE TABLE in <code>order_metrics.sql</code> uses an anti-join to prevent double-counting: if a paid conversion order already exists as a direct order in <code>experiment_order_cache</code>, exclude it from f2p.</p>
+
+<h3>The anti-join (lines 181&ndash;194)</h3>
+<pre><span class="highlight-line">LEFT JOIN (</span><span class="highlight-line">    SELECT order_id, row_id</span><span class="highlight-line">    FROM experiment_order_cache</span><span class="highlight-line">    GROUP BY order_id, row_id</span><span class="highlight-line">) eeo</span><span class="highlight-line">ON fe.paid_bill_id = eeo.order_id</span><span class="highlight-line">AND fe.paid_bill_line_num = eeo.row_id</span>WHERE ...
+AND eeo.order_id IS NULL   -- exclude if paid order exists as direct order
+AND eeo.row_id IS NULL</pre>
+
+<p class="fileref">hivemind-business-analytics/queries/experiment_kpis/order_metrics.sql:181-194</p>
+
+<h3>Why it breaks in the cube path</h3>
+
+<p>In the <strong>Level 4 SQL path</strong> (normal execution), <code>experiment_order_cache</code> is filtered by <code>scorecard_template_name</code>. The anti-join only checks orders within the same scorecard. Narrow scope &rarr; correct behavior.</p>
+
+<p>In the <strong>cube path</strong> (MetricCubeJob), <code>strip_scorecard_filters()</code> removes the scorecard filter. <code>experiment_order_cache</code> now contains <strong>all orders from all experiments across all scorecards</strong>. The anti-join checks paid orders against this global set &mdash; a conversion order that&rsquo;s a direct order in <em>any</em> experiment gets excluded from f2p for <em>every</em> experiment.</p>
+
+<h3>Why this disproportionately affects treatment</h3>
+
+<ul>
+  <li><strong>Treatment</strong> creates Starter trials (subline=<code>Starter</code>). Their f2p conversions are real paid product orders that commonly appear in <code>experiment_order</code> for other experiments &rarr; anti-joined out &rarr; visible GCR loss.</li>
+  <li><strong>Control</strong> creates Free trials (subline=<code>Free</code>). Their f2p conversions are also anti-joined out, but the stats engine filter already excludes <code>product_pnl_subline_name = 'Free'</code> &rarr; the loss is invisible.</li>
+</ul>
+
+<hr class="divider">
+
+<h2>Evidence</h2>
+
+<h3>1. Example conversion order exists in 39 experiments</h3>
+
+<p>Order <code>4171198448</code> is a $119.88 paid conversion from Starter trial <code>4170626077</code>. It exists in <code>experiment_order</code> for 39 different experiments on the latest partition:</p>
+
+<div class="query-block">
+  <div class="query-label">Athena query</div>
+  <pre>SELECT experiment_id, scorecard_template_name, cohort_id, order_id, gcr_usd_amt
+FROM hivemind_analytics.experiment_order
+WHERE order_id = '4171198448'
+AND record_create_mst_date = (
+  SELECT MAX(record_create_mst_date) FROM hivemind_analytics.experiment_order
+)</pre>
+</div>
+
+<p><strong>Result: 39 rows</strong> &mdash; including <code>commerce_catalog_baseline_aa</code>, <code>myrenewals_good_standing_subscription</code>, <code>serp_badges_for_expiring_names...</code>, <code>aab_recommended_plan_uppdcx</code>, and 35 others. Every row shows the same order with $119.88 GCR. The anti-join in the cube path sees this order and excludes it from f2p for <em>all</em> experiments, including ours where it is not a direct order.</p>
+
+<h3>2. Quantified impact: treatment Starter f2p</h3>
+
+<div class="query-block">
+  <div class="query-label">Athena query &mdash; anti-join simulation</div>
+<pre>WITH latest_eo AS (
+  SELECT * FROM hivemind_analytics.experiment_order
+  WHERE record_create_mst_date = (
+    SELECT MAX(record_create_mst_date) FROM hivemind_analytics.experiment_order)
+),
+this_exp_trials AS (
+  SELECT DISTINCT order_id, row_id, cohort_id, gcr_usd_amt
+  FROM latest_eo
+  WHERE experiment_id = 'merch_precheck_gdexp_14156_AAB_99'
+  AND product_free_trial_flag = true
+  AND product_pnl_subline_name = 'Starter'
+),
+f2p_candidates AS (
+  SELECT t.cohort_id, fe.paid_bill_id, fe.paid_bill_line_num,
+         fb.gcr_usd_amt AS conversion_gcr
+  FROM enterprise.free_entitlement fe
+  INNER JOIN this_exp_trials t
+    ON fe.free_bill_id = t.order_id AND fe.free_bill_line_num = t.row_id
+  INNER JOIN enterprise.fact_bill_line fb
+    ON fe.paid_bill_id = fb.bill_id AND fe.paid_bill_line_num = fb.bill_line_num
+  WHERE fe.paid_bill_mst_date >= DATE '2026-08-01'
+),
+anti_join_check AS (
+  SELECT f.cohort_id, f.conversion_gcr,
+    CASE WHEN eo2.order_id IS NOT NULL
+         THEN 'EXCLUDED_BY_ANTIJOIN' ELSE 'INCLUDED' END AS status
+  FROM f2p_candidates f
+  LEFT JOIN (SELECT DISTINCT order_id, row_id FROM latest_eo) eo2
+    ON f.paid_bill_id = eo2.order_id AND f.paid_bill_line_num = eo2.row_id
+)
+SELECT cohort_id, status, COUNT(*) AS conversions, ROUND(SUM(conversion_gcr), 2) AS gcr
+FROM anti_join_check
+GROUP BY cohort_id, status ORDER BY cohort_id, status</pre>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Cohort</th><th>Status</th><th class="num">Conversions</th><th class="num">GCR</th></tr></thead>
+  <tbody>
+    <tr><td>treatment1</td><td class="excluded">EXCLUDED by anti-join</td><td class="num">86</td><td class="num excluded">$9,957.11</td></tr>
+    <tr><td>treatment1</td><td class="included">INCLUDED</td><td class="num">29</td><td class="num included">$3,371.97</td></tr>
+    <tr><td>treatment2</td><td class="excluded">EXCLUDED by anti-join</td><td class="num">78</td><td class="num excluded">$9,433.14</td></tr>
+    <tr><td>treatment2</td><td class="included">INCLUDED</td><td class="num">21</td><td class="num included">$2,417.59</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>75% of treatment1 Starter f2p conversions ($9,957 of $13,329) are incorrectly excluded.</p>
+
+<h3>3. Control confirms asymmetric visibility</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Control1 Free f2p</th><th class="num">Conversions</th><th class="num">GCR</th></tr></thead>
+  <tbody>
+    <tr><td class="excluded">EXCLUDED by anti-join</td><td class="num">162</td><td class="num">$15,260.01</td></tr>
+    <tr><td class="included">INCLUDED</td><td class="num">9</td><td class="num">$762.96</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>95% of control&rsquo;s f2p is also excluded &mdash; but it&rsquo;s invisible in the scorecard because <code>product_pnl_subline_name = 'Free'</code> is filtered out by the <code>new_airo_builder_paid_plan_order</code> named filter. Control&rsquo;s reported GCR matches Shashi&rsquo;s manual calc because both exclude Free subline.</p>
+
+<h3>4. sqlglot rewrite verified locally</h3>
+
+<p>Tested <code>rewrite_full_sql()</code> on the f2p CACHE TABLE statement using the production extra_columns list. sqlglot parses <code>CACHE TABLE</code> as a <code>Cache</code> node in Spark dialect. The f2p SQL passes through without corruption &mdash; the anti-join subquery&rsquo;s GROUP BY is unchanged. The bug is not in the rewrite; it&rsquo;s in the anti-join&rsquo;s implicit assumption that <code>experiment_order_cache</code> is scoped to one scorecard.</p>
+
+<hr class="divider">
+
+<h2>Proposed fix</h2>
+
+<p>Add <code>experiment_id</code> and <code>cohort_id</code> scoping to the f2p anti-join subquery. In the Level 4 SQL path this is a no-op (already scoped by scorecard). In the cube path it correctly scopes the anti-join per experiment.</p>
+
+<div class="diff diff-before">
+  <div class="diff-label">Before &mdash; order_metrics.sql:181&ndash;194</div>
+<pre>LEFT JOIN (
+    SELECT order_id, row_id
+    FROM experiment_order_cache
+    GROUP BY order_id, row_id
+) eeo
+ON fe.paid_bill_id = eeo.order_id
+AND fe.paid_bill_line_num = eeo.row_id</pre>
+</div>
+
+<div class="diff diff-after">
+  <div class="diff-label">After</div>
+<pre>LEFT JOIN (
+    SELECT order_id, row_id, experiment_id, cohort_id
+    FROM experiment_order_cache
+    GROUP BY order_id, row_id, experiment_id, cohort_id
+) eeo
+ON fe.paid_bill_id = eeo.order_id
+AND fe.paid_bill_line_num = eeo.row_id
+AND eo.experiment_id = eeo.experiment_id
+AND eo.cohort_id = eeo.cohort_id</pre>
+</div>
+
+<p class="fileref">hivemind-business-analytics/queries/experiment_kpis/order_metrics.sql</p>
+
+<p>The same fix applies to <code>post_rollout_order_metrics_workflow.py</code> which uses the same SQL template for post-rollout cubes.</p>
+
+<hr class="divider">
+
+<h2>Scope of impact</h2>
+
+<p>This is a <strong>platform-level bug</strong> affecting every experiment that relies on f2p conversions through the order metrics data cube. An experiment is affected when:</p>
+
+<ul>
+  <li>Users sign up for free/trial products that later convert to paid</li>
+  <li>Those paid conversion orders also exist as direct orders in other experiments (extremely common &mdash; a single order appeared in 39 experiments)</li>
+  <li>The metric&rsquo;s named filter includes the trial&rsquo;s PNL subline (so the loss is visible in the scorecard)</li>
+</ul>
+
+<p>Severity scales with user overlap across experiments. On GoDaddy&rsquo;s platform, a typical user is bucketed into 30&ndash;40 experiments simultaneously, so most paid conversion orders will exist in <code>experiment_order</code> for many experiments.</p>
+
+<hr class="divider">
+
+<h2>Experiment context</h2>
+
+<div class="table-wrap">
+<table>
+  <tbody>
+    <tr><td style="font-weight:500; width:200px">Experiment</td><td><code>merch_precheck_gdexp_14156_AAB_99</code></td></tr>
+    <tr><td style="font-weight:500">Scorecard</td><td><code>dpp-e2e-precheck</code></td></tr>
+    <tr><td style="font-weight:500">Traffic type</td><td><code>visitor_guid</code></td></tr>
+    <tr><td style="font-weight:500">Start date</td><td>2026-08-20</td></tr>
+    <tr><td style="font-weight:500">End date</td><td>null (still running)</td></tr>
+    <tr><td style="font-weight:500">Cohorts</td><td>control1 (33.3%), treatment1 (33.3%), treatment2 (33.3%)</td></tr>
+    <tr><td style="font-weight:500">Affected metrics</td><td><code>new_airo_builder_paid_plan_gcr</code>, <code>new_purchase_gcr_amt</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>What the experiment does to trials</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Cohort</th><th class="num">Free trials (subline=Free)</th><th class="num">Starter trials (subline=Starter)</th></tr></thead>
+  <tbody>
+    <tr><td>control1</td><td class="num">4,302</td><td class="num">4</td></tr>
+    <tr><td>treatment1</td><td class="num">3,717</td><td class="num">2,403</td></tr>
+    <tr><td>treatment2</td><td class="num">3,813</td><td class="num">2,045</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The precheck flow shifts trial orders from <code>Free</code> subline to <code>Starter</code> subline in treatment groups. This makes the f2p anti-join bug visible for treatment (Starter passes the named filter) but invisible for control (Free is excluded by the named filter regardless).</p>
