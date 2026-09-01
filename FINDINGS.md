@@ -113,7 +113,17 @@ $9,957 excluded Starter f2p GCR vs Shashi's ~$7,770 gap. Difference because:
 
 ## 5. Scope of impact
 
-This is a **platform-level bug** affecting ALL experiments that rely on f2p conversions through the data cube path (MetricCubeJob). An experiment is affected when:
+This is a **platform-level bug** affecting ALL experiments that rely on f2p conversions through the data cube path (MetricCubeJob).
+
+### Platform-wide count
+
+As of 2026-09-01, **549 experiments** have `product_free_trial_conversion_flag = true` in `experiment_order` on the latest partition. All 549 are potentially affected by the over-scoped anti-join. See `queries/06-platform-impact-scope.sql`.
+
+Not all 549 will show a *visible* GCR discrepancy in their scorecard — visibility depends on whether the metric's named filter includes the trial's PNL subline. But the anti-join is silently over-excluding f2p conversions for all of them in the data cube path.
+
+### Conditions for impact
+
+An experiment is affected when:
 
 1. Users sign up for free/trial products that later convert to paid
 2. Those paid conversion orders also exist as direct orders in other experiments (very common — 39+ experiment overlap per user)

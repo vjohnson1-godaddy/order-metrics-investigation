@@ -67,3 +67,13 @@ The precheck flow shifts trials from Free to Starter in treatment groups.
 | treatment2 | Starter | 122 | $14,608 |
 
 Note: May contain partition duplicates from Athena scan.
+
+## Platform-wide impact scope
+
+Query run: 2026-09-01 (Athena execution ID: `8443251a-bab3-47f9-990d-f5fcfdad7cec`)
+
+| Metric | Value |
+|--------|-------|
+| Experiments with f2p conversions | **549** |
+
+All 549 experiments have `product_free_trial_conversion_flag = true` in `experiment_order` on the latest partition. The anti-join bug potentially affects all of them through the data cube path.

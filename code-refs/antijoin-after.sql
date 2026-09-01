@@ -8,6 +8,11 @@
 --
 -- The eo.experiment_id and eo.cohort_id references come from the outer query's
 -- join to experiment_order_cache (aliased as eo), which is available in scope.
+--
+-- Note: cohort_id scoping is technically redundant — deterministic MD5 bucketing
+-- means a user is in exactly one cohort per experiment, so experiment_id alone
+-- is sufficient. Including cohort_id is harmless and makes the intent explicit.
+-- Draft PR: hivemind-business-analytics#678
 
 LEFT JOIN (
     SELECT order_id, row_id, experiment_id, cohort_id

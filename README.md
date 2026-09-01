@@ -18,7 +18,7 @@ Treatment GCR is under-reported in Hivemind vs manual calculation. Control match
 
 A typical paid conversion order exists in `experiment_order` for ~39 other experiments (users are bucketed into many experiments simultaneously), so ~75% of treatment's Starter f2p conversions are incorrectly excluded.
 
-**This is a platform-level bug** affecting all experiments with f2p conversions through the data cube.
+**This is a platform-level bug** affecting all experiments with f2p conversions through the data cube. As of 2026-09-01, **549 experiments** have f2p conversion data in `experiment_order` — all are potentially affected.
 
 ## Investigation structure
 
@@ -30,7 +30,8 @@ A typical paid conversion order exists in `experiment_order` for ~39 other exper
 │   ├── 02-antijoin-impact-treatment.sql   # Quantifies excluded Starter f2p conversions
 │   ├── 03-antijoin-impact-control.sql     # Shows control is equally affected but invisible
 │   ├── 04-trial-distribution.sql          # Free vs Starter trial counts by cohort
-│   └── 05-f2p-conversion-candidates.sql   # Raw f2p conversion join simulation
+│   ├── 05-f2p-conversion-candidates.sql   # Raw f2p conversion join simulation
+│   └── 06-platform-impact-scope.sql       # Count of all experiments with f2p conversions
 ├── code-refs/
 │   ├── antijoin-before.sql                # Current buggy anti-join (order_metrics.sql:181-194)
 │   ├── antijoin-after.sql                 # Proposed fix with experiment_id scoping
@@ -69,7 +70,10 @@ AND eo.cohort_id = eeo.cohort_id
 
 This is a no-op in the Level 4 SQL path (already scoped by scorecard) but correctly scopes the anti-join per experiment in the cube path.
 
+**Note on `cohort_id` scoping:** The `cohort_id` join is technically redundant — a user can only be in one cohort per experiment (deterministic MD5 bucketing), so `experiment_id` alone is sufficient. Including `cohort_id` is harmless and makes the intent explicit. No re-bucketing scenario can put the same user in two cohorts for one experiment.
+
 **Target file:** `hivemind-business-analytics/queries/experiment_kpis/order_metrics.sql:181-194`
+**Draft PR:** [hivemind-business-analytics#678](https://github.com/gdcorp-dna/hivemind-business-analytics/pull/678)
 
 ## Ruled-out hypotheses
 
